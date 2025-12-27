@@ -1,20 +1,15 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { BossType } from "@/lib/bosses"
-
-type TrackedBoss = {
-  bossId: string
-  bossName: string
-  bossType: BossType
-  timeInSeconds: number
-  createdAt: number
-}
+import { TrackedBoss } from "@/lib/types"
+import { Button } from "@/components/ui/button"
 
 type BossListProps = {
   bosses: TrackedBoss[]
-  onExpire: (key: string) => void
+  onExpire: (id: string) => void
 }
+
+const APPEAR_DELAY = 180
 
 function formatTime(seconds: number) {
   const h = Math.floor(seconds / 3600)
@@ -27,8 +22,6 @@ function formatTime(seconds: number) {
     s.toString().padStart(2, "0"),
   ].join(":")
 }
-
-const APPEAR_DELAY = 180
 
 export function BossList({ bosses, onExpire }: BossListProps) {
   const [, forceUpdate] = useState(0)
@@ -51,22 +44,14 @@ export function BossList({ bosses, onExpire }: BossListProps) {
         const appearedFor = Math.floor((now - endTime) / 1000)
 
         if (appearedFor >= APPEAR_DELAY) {
-          onExpire(`${boss.bossId}-${boss.createdAt}`)
+          onExpire(boss.id)
           return null
         }
 
-        return {
-          ...boss,
-          remainingSeconds: 0,
-          appeared: true,
-        }
+        return { ...boss, remainingSeconds: 0, appeared: true }
       }
 
-      return {
-        ...boss,
-        remainingSeconds,
-        appeared: false,
-      }
+      return { ...boss, remainingSeconds, appeared: false }
     })
     .filter(Boolean)
     .sort((a: any, b: any) => {
@@ -79,9 +64,10 @@ export function BossList({ bosses, onExpire }: BossListProps) {
     <div className="space-y-3">
       {visibleBosses.map((boss: any) => (
         <div
-          key={`${boss.bossId}-${boss.createdAt}`}
+          key={boss.id}
           className="flex items-center justify-between rounded-lg border p-3"
         >
+          {/* left */}
           <div>
             <div className="font-semibold">{boss.bossName}</div>
             <div className="text-xs text-muted-foreground">
@@ -89,13 +75,28 @@ export function BossList({ bosses, onExpire }: BossListProps) {
             </div>
           </div>
 
-          {boss.appeared ? (
-            <div className="font-semibold text-green-600">Appeared</div>
-          ) : (
-            <div className="font-mono text-lg">
-              {formatTime(boss.remainingSeconds)}
-            </div>
-          )}
+          {/* right */}
+          <div className="flex items-center gap-3">
+            {boss.appeared ? (
+              <div className="font-semibold text-green-600">
+                Appeared
+              </div>
+            ) : (
+              <div className="font-mono text-lg">
+                {formatTime(boss.remainingSeconds)}
+              </div>
+            )}
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onExpire(boss.id)}
+              className="text-red-500 hover:bg-red-50"
+              title="Remove"
+            >
+              ✕
+            </Button>
+          </div>
         </div>
       ))}
     </div>
