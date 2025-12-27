@@ -46,6 +46,7 @@ export const BOSSES: Boss[] = [
     { id: "necromancer", name: "Necromancer", type: "Mini" },
     { id: "ogretooth", name: "Ogretooth", type: "Mini" },
     { id: "skeggiold", name: "Skeggiold", type: "Mini" },
+    { id: "observation", name: "Observation", type: "Mini" },
     { id: "faceworm_queen", name: "Faceworm Queen", type: "Mini" },
     { id: "queen_scaraba", name: "Queen Scaraba", type: "Mini" },
     { id: "ktullanux", name: "Ktullanux", type: "Mini" },

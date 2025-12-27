@@ -48,14 +48,12 @@ export default function Page() {
 
   function removeBoss(key: string) {
     setBosses((prev) =>
-      prev.filter(
-        (b) => `${b.bossId}-${b.createdAt}` !== key
-      )
+      prev.filter((b) => `${b.bossId}-${b.createdAt}` !== key)
     )
   }
 
   return (
-    <main className="relative max-w-md mx-auto p-6 space-y-6 bg-white rounded-xl">
+    <main className="max-w-md mx-auto p-6 space-y-6 bg-white rounded-xl">
       <div className="flex flex-row justify-between items-end">
         <h1 className="text-2xl font-bold">ROX Boss Tracker</h1>
         <button
@@ -65,13 +63,11 @@ export default function Page() {
           View Attemps
         </button>
       </div>
+
       <BossForm onAdd={addBoss} />
       <BossList bosses={bosses} onExpire={removeBoss} />
-      {showAttempts && (
-        <div className="absolute top-6 left-full ml-6 w-[360px]">
-          <AttemptsCard />
-        </div>
-      )}
+
+      {showAttempts && <AttemptsCard />}
     </main>
   )
 }

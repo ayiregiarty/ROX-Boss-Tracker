@@ -17,8 +17,6 @@ type BossListProps = {
 }
 
 function formatTime(seconds: number) {
-  if (seconds <= 0) return "00:00:00"
-
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
   const s = seconds % 60
@@ -29,6 +27,8 @@ function formatTime(seconds: number) {
     s.toString().padStart(2, "0"),
   ].join(":")
 }
+
+const APPEAR_DELAY = 180
 
 export function BossList({ bosses, onExpire }: BossListProps) {
   const [, forceUpdate] = useState(0)
@@ -48,17 +48,32 @@ export function BossList({ bosses, onExpire }: BossListProps) {
       const remainingSeconds = Math.floor((endTime - now) / 1000)
 
       if (remainingSeconds <= 0) {
-        onExpire(`${boss.bossId}-${boss.createdAt}`)
-        return null
+        const appearedFor = Math.floor((now - endTime) / 1000)
+
+        if (appearedFor >= APPEAR_DELAY) {
+          onExpire(`${boss.bossId}-${boss.createdAt}`)
+          return null
+        }
+
+        return {
+          ...boss,
+          remainingSeconds: 0,
+          appeared: true,
+        }
       }
 
       return {
         ...boss,
         remainingSeconds,
+        appeared: false,
       }
     })
     .filter(Boolean)
-    .sort((a: any, b: any) => a.remainingSeconds - b.remainingSeconds)
+    .sort((a: any, b: any) => {
+      if (a.appeared && !b.appeared) return -1
+      if (!a.appeared && b.appeared) return 1
+      return a.remainingSeconds - b.remainingSeconds
+    })
 
   return (
     <div className="space-y-3">
@@ -74,9 +89,13 @@ export function BossList({ bosses, onExpire }: BossListProps) {
             </div>
           </div>
 
-          <div className="font-mono text-lg">
-            {formatTime(boss.remainingSeconds)}
-          </div>
+          {boss.appeared ? (
+            <div className="font-semibold text-green-600">Appeared</div>
+          ) : (
+            <div className="font-mono text-lg">
+              {formatTime(boss.remainingSeconds)}
+            </div>
+          )}
         </div>
       ))}
     </div>
