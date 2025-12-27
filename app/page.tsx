@@ -7,6 +7,7 @@ import { BossList } from "@/components/BossList"
 import { TrackedBoss } from "@/lib/types"
 import { BossType } from "@/lib/bosses"
 import { AttemptsLocal } from "@/components/attempts/attemptsLocal"
+import { supabase } from "@/lib/supabase"
 
 const STORAGE_KEY = "rox-tracked-bosses"
 const CHANNEL_NAME = "rox-boss-sync"
@@ -67,8 +68,20 @@ export default function Page() {
     setBosses((prev) => prev.filter((b) => b.id !== id))
   }
 
-  function createRoom() {
+  async function createRoom() {
     const roomId = crypto.randomUUID()
+  
+    const { data, error } = await supabase
+      .from("rooms")
+      .insert({ id: roomId })
+  
+    console.log("ROOM INSERT", { data, error })
+  
+    if (error) {
+      alert("Failed to create room. Check console.")
+      return
+    }
+  
     router.push(`/room/${roomId}`)
   }
 
