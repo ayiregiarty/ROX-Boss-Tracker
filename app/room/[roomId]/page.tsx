@@ -7,7 +7,7 @@ import { BossForm } from "@/components/BossForm"
 import { BossList } from "@/components/BossList"
 import { BossType } from "@/lib/bosses"
 import { TrackedBoss } from "@/lib/types"
-import { AttemptsRoom } from "@/components/attempts/attemptsRoom"
+import { AttemptsLocal } from "@/components/attempts/attemptsLocal"
 
 type DbBoss = {
   id: string
@@ -52,7 +52,6 @@ export default function RoomPage() {
       })
   }, [roomId])
 
-  /* ---------- realtime sync ---------- */
   useEffect(() => {
     if (!roomId) return
 
@@ -156,7 +155,7 @@ export default function RoomPage() {
 
       {showAttempts && (
         <div className="absolute top-6 left-full ml-6 w-[360px]">
-          <AttemptsRoom roomId={roomId} />
+          <AttemptsLocal />
         </div>
       )}
     </div>

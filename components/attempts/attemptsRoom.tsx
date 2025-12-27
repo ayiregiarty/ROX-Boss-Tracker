@@ -8,15 +8,21 @@ export function AttemptsRoom({ roomId }: { roomId: string }) {
   const [rows, setRows] = useState<AttemptRow[]>([])
 
   useEffect(() => {
+    if (!roomId) return
+
     supabase
       .from("attempts")
       .select("*")
       .eq("room_id", roomId)
       .order("attempt_at", { ascending: true })
-      .then(({ data }) => data && setRows(data))
+      .then(({ data }) => {
+        if (data) setRows(data)
+      })
   }, [roomId])
 
   useEffect(() => {
+    if (!roomId) return
+
     const channel = supabase
       .channel(`attempts-${roomId}`)
       .on(
@@ -27,12 +33,26 @@ export function AttemptsRoom({ roomId }: { roomId: string }) {
           table: "attempts",
           filter: `room_id=eq.${roomId}`,
         },
-        () => {
-          supabase
-            .from("attempts")
-            .select("*")
-            .eq("room_id", roomId)
-            .then(({ data }) => data && setRows(data))
+        (payload) => {
+          setRows((prev) => {
+            if (payload.eventType === "INSERT") {
+              return [...prev, payload.new as AttemptRow]
+            }
+
+            if (payload.eventType === "UPDATE") {
+              return prev.map((r) =>
+                r.id === payload.new.id
+                  ? (payload.new as AttemptRow)
+                  : r
+              )
+            }
+
+            if (payload.eventType === "DELETE") {
+              return prev.filter((r) => r.id !== payload.old.id)
+            }
+
+            return prev
+          })
         }
       )
       .subscribe()
@@ -56,10 +76,18 @@ export function AttemptsRoom({ roomId }: { roomId: string }) {
     field: "character_name" | "mvp" | "mini",
     value: string | number
   ) => {
-    await supabase.from("attempts").update({ [field]: value }).eq("id", id)
+    setRows((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, [field]: value } : r))
+    )
+
+    await supabase
+      .from("attempts")
+      .update({ [field]: value })
+      .eq("id", id)
   }
 
   const remove = async (id: string) => {
+    setRows((prev) => prev.filter((r) => r.id !== id))
     await supabase.from("attempts").delete().eq("id", id)
   }
 

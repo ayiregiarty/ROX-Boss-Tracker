@@ -46,7 +46,7 @@ export function AttemptsUI({
             />
             <Input
               type="number"
-              className="w-16 text-center"
+              className="w-20 text-center"
               value={r.mvp}
               onChange={(e) =>
                 onUpdate(r.id, "mvp", Number(e.target.value))
@@ -54,7 +54,7 @@ export function AttemptsUI({
             />
             <Input
               type="number"
-              className="w-16 text-center"
+              className="w-20 text-center"
               value={r.mini}
               onChange={(e) =>
                 onUpdate(r.id, "mini", Number(e.target.value))
