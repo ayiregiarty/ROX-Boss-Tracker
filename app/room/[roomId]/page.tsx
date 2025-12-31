@@ -7,7 +7,8 @@ import { BossForm } from "@/components/BossForm"
 import { BossList } from "@/components/BossList"
 import { BossType } from "@/lib/bosses"
 import { TrackedBoss } from "@/lib/types"
-import { AttemptsLocal } from "@/components/attempts/attemptsLocal"
+import { AttemptsRoom } from "@/components/attempts/attemptsRoom"
+
 
 type DbBoss = {
   id: string
@@ -32,11 +33,17 @@ function mapDbBoss(b: DbBoss): TrackedBoss {
 
 export default function RoomPage() {
   const { roomId } = useParams<{ roomId: string }>()
+
+  const [mounted, setMounted] = useState(false)
   const [bosses, setBosses] = useState<TrackedBoss[]>([])
   const [showAttempts, setShowAttempts] = useState(false)
 
   useEffect(() => {
-    if (!roomId) return
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted || !roomId) return
 
     supabase
       .from("boss_tracks")
@@ -50,10 +57,10 @@ export default function RoomPage() {
         }
         if (data) setBosses(data.map(mapDbBoss))
       })
-  }, [roomId])
+  }, [mounted, roomId])
 
   useEffect(() => {
-    if (!roomId) return
+    if (!mounted || !roomId) return
 
     const channel = supabase
       .channel(`boss-tracks-${roomId}`)
@@ -67,8 +74,7 @@ export default function RoomPage() {
         },
         (payload) => {
           setBosses((prev) => {
-            const exists = prev.some((b) => b.id === payload.new.id)
-            if (exists) return prev
+            if (prev.some((b) => b.id === payload.new.id)) return prev
             return [...prev, mapDbBoss(payload.new as DbBoss)]
           })
         }
@@ -91,7 +97,7 @@ export default function RoomPage() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [roomId])
+  }, [mounted, roomId])
 
   async function addBoss(data: {
     bossId: string
@@ -99,6 +105,8 @@ export default function RoomPage() {
     bossType: BossType
     timeInSeconds: number
   }) {
+    if (!roomId) return
+
     const { data: inserted, error } = await supabase
       .from("boss_tracks")
       .insert({
@@ -117,8 +125,7 @@ export default function RoomPage() {
     }
 
     setBosses((prev) => {
-      const exists = prev.some((b) => b.id === inserted.id)
-      if (exists) return prev
+      if (prev.some((b) => b.id === inserted.id)) return prev
       return [...prev, mapDbBoss(inserted)]
     })
   }
@@ -127,26 +134,19 @@ export default function RoomPage() {
     await supabase.from("boss_tracks").delete().eq("id", id)
   }
 
-  useEffect(() => {
-    console.log("ROOM ID FROM URL:", roomId)
-  
-    supabase
-      .from("boss_tracks")
-      .select("*")
-      .then((res) => {
-        console.log("ALL boss_tracks:", res)
-      })
-  }, [roomId])
+  if (!mounted || !roomId) {
+    return null
+  }
 
   return (
-    <div className="relative max-w-md mx-auto p-6 space-y-4 bg-white rounded-xl">
+    <div className="relative max-w-md mx-4 p-6 space-y-4 bg-white rounded-xl">
       <h1 className="text-2xl font-bold">ROX Boss Tracker</h1>
 
       <BossForm onAdd={addBoss} />
 
       <button
         onClick={() => setShowAttempts((v) => !v)}
-        className="text-sm text-orange-500 underline self-start"
+        className="text-sm text-orange-500 underline"
       >
         {showAttempts ? "Hide Attempts" : "View Attempts"}
       </button>
@@ -154,8 +154,8 @@ export default function RoomPage() {
       <BossList bosses={bosses} onExpire={removeBoss} />
 
       {showAttempts && (
-        <div className="absolute top-6 left-full ml-6 w-[360px]">
-          <AttemptsLocal />
+        <div className="absolute top-0 left-full ml-2 w-[400px]">
+          <AttemptsRoom roomId={roomId} />
         </div>
       )}
     </div>

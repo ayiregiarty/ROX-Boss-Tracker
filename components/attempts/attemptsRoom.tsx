@@ -1,23 +1,25 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { supabase } from "@/lib/supabase"
 import { AttemptsUI, AttemptRow } from "@/components/ViewAttempts"
 
 export function AttemptsRoom({ roomId }: { roomId: string }) {
   const [rows, setRows] = useState<AttemptRow[]>([])
+  const debounceRef = useRef<Record<string, NodeJS.Timeout>>({})
+  const editingRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     if (!roomId) return
 
     supabase
-      .from("attempts")
-      .select("*")
-      .eq("room_id", roomId)
-      .order("attempt_at", { ascending: true })
-      .then(({ data }) => {
-        if (data) setRows(data)
-      })
+    .from("attempts")
+    .select("*")
+    .eq("room_id", roomId)
+    .order("created_at", { ascending: true })
+    .then(({ data }) => {
+      if (data) setRows(data)
+    })
   }, [roomId])
 
   useEffect(() => {
@@ -36,10 +38,15 @@ export function AttemptsRoom({ roomId }: { roomId: string }) {
         (payload) => {
           setRows((prev) => {
             if (payload.eventType === "INSERT") {
+              if (prev.some((r) => r.id === payload.new.id)) return prev
               return [...prev, payload.new as AttemptRow]
             }
 
             if (payload.eventType === "UPDATE") {
+              if (editingRef.current.has(payload.new.id)) {
+                return prev
+              }
+
               return prev.map((r) =>
                 r.id === payload.new.id
                   ? (payload.new as AttemptRow)
@@ -71,19 +78,25 @@ export function AttemptsRoom({ roomId }: { roomId: string }) {
     })
   }
 
-  const update = async (
+  const update = (
     id: string,
     field: "character_name" | "mvp" | "mini",
     value: string | number
   ) => {
+    editingRef.current.add(id)
+
     setRows((prev) =>
       prev.map((r) => (r.id === id ? { ...r, [field]: value } : r))
     )
 
-    await supabase
-      .from("attempts")
-      .update({ [field]: value })
-      .eq("id", id)
+    const key = `${id}-${field}`
+    clearTimeout(debounceRef.current[key])
+
+    debounceRef.current[key] = setTimeout(async () => {
+      await supabase.from("attempts").update({ [field]: value }).eq("id", id)
+
+      editingRef.current.delete(id)
+    }, 400)
   }
 
   const remove = async (id: string) => {

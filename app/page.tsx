@@ -109,7 +109,7 @@ export default function Page() {
         </button>
 
         {showAttempts && (
-          <div className="absolute top-6 left-full ml-6 w-[360px]">
+          <div className="absolute top-0 left-full ml-6 w-[400px]">
             <AttemptsLocal />
           </div>
         )}

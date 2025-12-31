@@ -90,9 +90,8 @@ export function BossForm({ onAdd }: BossFormProps) {
             </SelectContent>
             </Select>
         </div>
-        </div>
+      </div>
 
-      {/* Time Inputs */}
       <div className="grid grid-cols-3 gap-3">
         <Input
           type="number"

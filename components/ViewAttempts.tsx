@@ -16,9 +16,46 @@ type Props = {
   onUpdate: (
     id: string,
     field: "character_name" | "mvp" | "mini",
-    value: string | number
+    value: number | string
   ) => void
   onRemove: (id: string) => void
+}
+
+const Counter = ({
+  value,
+  onChange,
+}: {
+  value: number
+  onChange: (v: number) => void
+}) => {
+  const inc = () => value < 3 && onChange(value + 1)
+  const dec = () => value > 0 && onChange(value - 1)
+
+  return (
+    <div className="flex items-center justify-between w-[88px] h-[36px] border rounded-md px-1">
+      <button
+        type="button"
+        onClick={dec}
+        disabled={value === 0}
+        className="w-6 h-6 flex items-center justify-center text-sm disabled:opacity-40"
+      >
+        −
+      </button>
+
+      <span className="text-sm font-medium w-4 text-center">
+        {value}
+      </span>
+
+      <button
+        type="button"
+        onClick={inc}
+        disabled={value === 3}
+        className="w-6 h-6 flex items-center justify-center text-sm disabled:opacity-40"
+      >
+        +
+      </button>
+    </div>
+  )
 }
 
 export function AttemptsUI({
@@ -31,7 +68,9 @@ export function AttemptsUI({
     <div className="rounded-xl border p-4 bg-white shadow">
       <div className="flex justify-between mb-2">
         <h3 className="font-semibold">Attempts</h3>
-        <Button size="sm" onClick={onAdd}>+ Add</Button>
+        <Button size="sm" onClick={onAdd}>
+          + Add
+        </Button>
       </div>
 
       <div className="space-y-2">
@@ -44,23 +83,23 @@ export function AttemptsUI({
                 onUpdate(r.id, "character_name", e.target.value)
               }
             />
-            <Input
-              type="number"
-              className="w-20 text-center"
+
+            <Counter
               value={r.mvp}
-              onChange={(e) =>
-                onUpdate(r.id, "mvp", Number(e.target.value))
-              }
+              onChange={(v) => onUpdate(r.id, "mvp", v)}
             />
-            <Input
-              type="number"
-              className="w-20 text-center"
+
+            <Counter
               value={r.mini}
-              onChange={(e) =>
-                onUpdate(r.id, "mini", Number(e.target.value))
-              }
+              onChange={(v) => onUpdate(r.id, "mini", v)}
             />
-            <Button variant="ghost" onClick={() => onRemove(r.id)}>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-red-500"
+              onClick={() => onRemove(r.id)}
+            >
               ✕
             </Button>
           </div>

@@ -67,7 +67,6 @@ export function BossList({ bosses, onExpire }: BossListProps) {
           key={boss.id}
           className="flex items-center justify-between rounded-lg border p-3"
         >
-          {/* left */}
           <div>
             <div className="font-semibold">{boss.bossName}</div>
             <div className="text-xs text-muted-foreground">
@@ -75,7 +74,6 @@ export function BossList({ bosses, onExpire }: BossListProps) {
             </div>
           </div>
 
-          {/* right */}
           <div className="flex items-center gap-3">
             {boss.appeared ? (
               <div className="font-semibold text-green-600">
